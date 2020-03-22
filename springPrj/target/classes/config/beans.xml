@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
+
+	<bean id="userMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="springPrj.user.mapper.UserMapper" />
+		<property name="sqlSessionTemplate" ref="sqlSession" />
+	</bean>
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:/config/sqlMapConfig.xml" />
+		<property name="mapperLocations">
+			<list>
+				<value>classpath:/config/User.xml</value>
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg ref="sqlSessionFactory" />	
+	</bean>
+
+	<!-- advice 로 등록된 bean id 를 참조하는 aop 설정 -->
+	<aop:config>
+		<aop:aspect id="traceAspect" ref="performanceTranceAdvice">
+			<aop:around pointcut="execution(public void print())" method="trace" />
+		</aop:aspect>
+	</aop:config>
+	
+	<context:property-placeholder location="classpath:config/value.properties"/>
+	<context:component-scan base-package="springPrj.user"/>
+	
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.SimpleDriverDataSource">
+		<property name="driverClass" value="${db.driverClass}" />
+		<property name="url" value="${db.url}" />
+		<property name="username" value="${db.username}"/>
+		<property name="password" value="${db.password}"/>
+	</bean>
+
+	<!-- advice 로 사용할 bean 등록 -->
+	<bean id="performanceTranceAdvice" class="springPrj.aop.xml.PerformanceTraceAdvice"/>
+
+	<bean id="hello" class="springPrj.di.xml.Hello">
+		<property name="name" value="Spring"/>
+		<property name="printer" ref="printer"></property>
+	</bean>
+	
+	<bean id="printer" class="springPrj.di.xml.StringPrinter"/>
+	<bean id="consolePrinter" class="springPrj.di.xml.ConsolePrinter"/>
+
+</beans>
